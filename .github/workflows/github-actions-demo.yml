@@ -1,17 +1,26 @@
-name: GitHub Actions Demo
-on: [push]
+name: Python package # Name of the Action.
+
+on: [push] # When this action runs.
+
 jobs:
-  Explore-GitHub-Actions:
-    runs-on: ubuntu-latest
+  build:
+
+    runs-on: ubuntu-latest # Which OS this runs on, you can also build on Windows or MacOS.
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8] # You can build against multiple Python versions.
+
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+    - uses: actions/checkout@v2 # Calling a pre-built GitHub Action which allows your Action to access your repository.
+    - name: Set up Python ${{ matrix.python-version }} # Name of an action that sets up Python.
+      uses: actions/setup-python@v2 # A pre-built GitHub Action that sets up a Python environment.
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies # The first step that isn't just calling another action.
+      run: |
+        python -m pip install --upgrade pip # Upgrade pip to the latest version.
+        pip install pytest # Install pytest.
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi # If we have a requirements.txt, then install it.
+    - name: Test with pytest # Final action which runs pytest. If any test fails, then this Action fails.
+      run: |
+        pytest
